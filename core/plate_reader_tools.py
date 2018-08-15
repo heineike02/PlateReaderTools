@@ -8,7 +8,7 @@ import string
 from itertools import chain
 
 def readplate(filename,sheetname,skiprows,rows,columns,datalabels,cycles,horz):
-    wholetc = pd.read_excel(filename,sheetname=sheetname,skiprows=skiprows)
+    wholetc = pd.read_excel(filename,sheet_name=sheetname,skiprows=skiprows)
 
     #Determine how the excel sheet is formatted: if horz == 1 then the cycle numbers run horizontally, otherwise if horz == 0 then the cycle numbers run vertically
 
@@ -223,28 +223,35 @@ def view_or_input_exp_design(data_index):
     else: 
         print("Didn't pick 1 or 2")
     
-    
-def delete_multiindex_for_missing_conditions(missing_items, data_index):
+def delete_multiindex_for_missing_conditions(missing_combos, data_index):
     #gives a new multiindex from a full multiindex with specified missing conditions. 
     #missing items is a list of tuples.  The tuples are of the form: 
-    #(Level1,Item missing from level 1, Level2, Item missing from level 2)
+    #(Level1,Item missing from level 1, Level2, Item missing from level 2, Level 3, Item missing from level 3, ...)
     #for instance if strain ABC is missing technical replicate 3, you would put: 
     #("strain", "ABC", "tech_rep", "TR3") 
     
     inds_to_remove = []
-    for missing_item in missing_items: 
-        missing_cat1 = missing_item[0]
-        missing_cat2 = missing_item[2]
-        missing_cat1_ind = [i for i,name in enumerate(data_index.names) if name == missing_cat1][0]
-        missing_cat2_ind = [i for i,name in enumerate(data_index.names) if name == missing_cat2][0]
-        missing_item1 = missing_item[1]
-        missing_item2 = missing_item[3]
-        missing_item1_ind = [i for i,name in enumerate(data_index.levels[missing_cat1_ind]) if name == missing_item1][0]
-        missing_item2_ind = [i for i,name in enumerate(data_index.levels[missing_cat2_ind]) if name == missing_item2][0]
-        combined_labels = list(zip(data_index.labels[missing_cat1_ind],data_index.labels[missing_cat2_ind]))
-        inds_to_remove_for_missing_item = [i for i,label in enumerate(combined_labels) if (label[0]==missing_item1_ind) and (label[1]==missing_item2_ind)]
-        inds_to_remove.append(inds_to_remove_for_missing_item)
-    
+    for missing_combo in missing_combos: 
+        layers_involved = [missing_combo[jj] for jj in 2*np.array(range(int(len(missing_combo)/2)))]
+        layers_involved_inds = []
+        for layer in layers_involved: 
+            layers_involved_inds.append([i for i,name in enumerate(data_index.names) if name == layer][0])
+        missing_layers = [missing_combo[jj] for jj in 2*np.array(range(int(len(missing_combo)/2)))+1]
+        missing_layers_inds = []
+        for jj,layer in enumerate(missing_layers):
+            missing_layers_inds.append([i for i,name in enumerate(data_index.levels[layers_involved_inds[jj]]) if name == layer][0])
+
+        combined_labels = zip(*[data_index.labels[jj] for jj in layers_involved_inds])
+
+        test_label = tuple(missing_layers_inds)
+        inds_to_remove_for_missing_combo = []
+        for ii,label in enumerate(combined_labels): 
+            if label==test_label:
+                inds_to_remove_for_missing_combo.append(ii)
+
+        inds_to_remove_for_missing_combo
+        inds_to_remove.append(inds_to_remove_for_missing_combo)
+
     #flatten out list of indices and remove duplicates. 
     inds_to_remove = list(set(chain.from_iterable(inds_to_remove)))
     
