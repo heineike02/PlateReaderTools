@@ -7,6 +7,20 @@ import matplotlib.pyplot as plt
 import string
 from itertools import chain
 
+##Would be nice to implement this without panels, as this error message keeps coming up:
+# I wonder if just doing a dictionary of dataframes would be sufficient
+#
+# C:\Users\BMH_work\Anaconda3\lib\site-packages\ipykernel_launcher.py:1: FutureWarning: 
+# Panel is deprecated and will be removed in a future version.
+# The recommended way to represent these types of 3-dimensional data are with a MultiIndex on a DataFrame, via the Panel.to_frame() method
+# Alternatively, you can use the xarray package http://xarray.pydata.org/en/stable/.
+# Pandas provides a `.to_xarray()` method to help automate this conversion.
+
+
+
+
+
+
 def readplate(filename,sheetname,skiprows,rows,columns,datalabels,cycles,horz):
     wholetc = pd.read_excel(filename,sheet_name=sheetname,skiprows=skiprows)
 
